@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Master de Vocabulario - 3500 Palabras</title>
+    <style>
+        :root { --p: #2c3e50; --a: #3498db; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .card-container { perspective: 1000px; width: 450px; height: 280px; cursor: pointer; }
+        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 15px; }
+        .card.flipped { transform: rotateY(180deg); }
+        .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; border-radius: 15px; text-align: center; font-size: 1.6rem; border: 2px solid #ddd; }
+        .front { background: white; color: var(--p); font-weight: bold; }
+        .back { background: var(--a); color: white; transform: rotateY(180deg); font-size: 1.3rem; }
+        .controls { margin-top: 25px; display: flex; gap: 10px; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; background: var(--p); color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        button:hover { background: #34495e; transform: translateY(-2px); }
+        .info { margin-top: 15px; font-weight: bold; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <div class="card-container" onclick="flip()">
+        <div class="card" id="c">
+            <div class="face front" id="q">Cargando vocabulario...</div>
+            <div class="face back" id="a">...</div>
+        </div>
+    </div>
+
+    <div class="info" id="status">0 / 0</div>
+
+    <div class="controls">
+        <button onclick="prev()">⬅ Anterior</button>
+        <button onclick="shuffle()">🔀 Mezclar todo</button>
+        <button onclick="next()">Siguiente ➡</button>
+    </div>
+
+<script>
+    // --- TU BASE DE DATOS OPTIMIZADA ---
+    // Puedes pegar aquí las 3500 líneas sin miedo. 
+    // Asegúrate de que cada línea termine en coma , excepto la última.
+    const data = [
+        {q: "régimen, m. de comidas", a: "stravovací režim"},
+        {q: "estar a régimen / a dieta", a: "mít stravovací režim / držet dietu"},
+	{q: "desayuno, m. x ayuno, m.", a: "snídaně x absence snídaně"},
+	{q: "desayunar x ayunar, estar en ayunas", a: "snídat x nesnídat, postit se"},
+ 	{q: "almuerzo, m., almorzar", a: "oběd, obědvat"},
+ 	{q: "merienda, f., merendar", a: "svačina, svačit"},
+ 	{q: "* tomar un piscolabis, el aperitivo", a: "* dát si něco k zakousnutí, aperitiv"},
+ 	{q: "merienda-cena, f.", a: "svačino-večeře, brzká večeře"},
+ 	{q: "cena, f., cenar", a: "večeře, večeřet"},
+ 	{q: "comer, devorar, tragar", a: "jíst, hltat, polykat"},
+ 	{q: "picar / picotear", a: "dát si něco malého / zobat"},
+ 	{q: "* hincar el diente", a: "dát si do nosu"},
+	{q: "comer entre comidas/entre horas, a deshoras", a: "jíst mezi jídly/mezi časem pro jídlo určeným/mimo čas pro jídlo určený"},
+	{q: "tomar un bocadito x bocadillo, m.", a: "kousnout si x dát si bagetu"},
+ 	{q: "* bocata, m.", a: "* bageta (hovorově)"},
+ 	{q: "pan, m. de molde", a: "toustový/sendvičový chléb"},
+ 	{q: "perrito, m. caliente", a: "párek v rohlíku"},
+	{q: "tomar un refresco, m./refrigerio, m., una bebida/algo de beber", a: "dát si nealkoholický sycený nápoj, minerálku, něco na pití"},
+ 	{q: "pincho, m. de tortilla", a: "tortilla de patatas servírovaná jako jednohubka"},
+	{q: "tapa", a: "malé porce více druhů jídla"},
+	{q: "sabor, m. salado, dulce, amargo, agrio, agridulce", a: "slaná, sladká, hořká, kyselá, sladkokyselá chuť"},
+	{q: "plato, m. rico, apetitoso, sabroso, delicioso x insípido, soso", a: "chutný, lákavý, lahodný, vynikající x bez chuti, neslaný (planý)"},
+ 	{q: "las patatas están crudas, poco hechas, doradas, en su punto, pasadas, quemadas", a: "brambory jsou syrové, málo uvařené, dozlatova upečené, tak akorát, rozvařené, spálené"},
+ 	{q: "el filete está caliente, templado, frío", a: "plátek je teplý, vlažný, studený"},
+ 	{q: "comida, f. caliente x fría, pesada x ligera", a: "teplé x studené, těžké x lehké jídlo"},
+ 	{q: "(carne de) cabeza, f., lengua, f.", a: "(maso z) hlava/y, jazyk"},
+ 	{q: "pechuga, f., pata, f., (de pollo)", a: "prso, noha (kuřecí)"},
+ 	{q: "ala, f., muslo, m.", a: "krídlo, stehno"},
+ 	{q: "costillas, pl.f., molleja, f.,", a: "žebra, žaludek (ptáci)/brzlík (orgán)"},
+ 	{q: "intestinos, pl.m., riñón, m.", a: "střeva, ledvina"},
+ 	{q: "hígado, m., sesos, pl.m.", a: "játra, mozky (gastronomie)"},
+ 	{q: "casquería, f.", a: "vnitřnosti"},
+ 	{q: "chuleta, f., filete, m./bistec, m.", a: "kotleta, steak/plátek"},
+ 	{q: "lonja, f., escalope, m.", a: "plátek, řízek"},
+ 	{q: "lomo, m., rosbif, m., solomillo, m.", a: "hřbet, roastbeef, svíčková"},
+ 	{q: "codillo, m.", a: "koleno"},
+ 	{q: "pescuezo, m./paletilla, f.", a: "krk, plec"},
+ 	{q: "costado, m., falda, f.", a: "bok, pupek"},
+ 	{q: "carne, f. de vaca/res", a: "hovězí maso"},
+ 	{q: "carne de cabrito/choto", a: "kůzlečí/telecí maso"},
+ 	{q: "carne de ternera, de oveja", a: "telecí, skopové maso"},
+ 	{q: "carne de carnero, de cordero", a: "beránčí/beraní maso"},
+ 	{q: "carne de cerdo", a: "vepřové maso"},
+ 	{q: "carne, f. de caza", a: "zvěřina"},
+ 	{q: "carne de liebre x carne de conejo", a: "zaječí x králičí maso"},
+ 	{q: "carne de ciervo, de corzo", a: "jelení, srnčí maso"},
+ 	{q: "carne de oso, de jabalí", a: "medvědí, kančí maso"},
+ 	{q: "ave, f. de corral x de campo/silvestre", a: "domácí x divoce žijící ptáci"},
+ 	{q: "gallina, f., pollo, m., gallo, m., oca, f., ganso, m.", a: "slepice, kuře, kohout, husa"},
+ 	{q: "pavo, m., pava, f., pato, m., faisán, m.", a: "krocan, krůta, kachna, páv"},
+ 	{q: "perdiz, f., codorniz, f., paloma, f., pichón, m.", a: "koroptev, křepelka, holubice, holubička"},
+ 	{q: "carne, f. asada, frita, a la plancha, guisada", a: "maso pečené, smažené, osmahnuté na pánvi, vařené s omáčkou"},
+ 	{q: "carne cocida, a la parilla", a: "vařené maso, maso na grilu"},
+ 	{q: "carne en conserva, en lata, congelada", a: "maso v plechovce, zamrazené maso"},
+ 	{q: "pescar, pescado, m. de agua dulce x salada/de mar", a: "rybařit, sladkovodní x slanovodní/mořské rybářství"},
+ 	{q: "pez, m.", a: "ryba"},
+ 	{q: "merluza, f., caballa, f., arenque, m.", a: "štikozubec, makrela, sleď"},
+ 	{q: "atún, m./bonito, m., escabeche, m.", a: "Tuňák (křídlatý), nálev do konzervy"},
+ 	{q: "besugo, m., anguila, f., angula, f.", a: "pražma královská, úhoř říční, monté/potěr (mláďata úhoře)"},
+ 	{q: "sardina, f., boquerón, m., ballena, f.", a: "sardinka, sardel obecná, velryba"},
+ 	{q: "tiburón, m., trucha, f., salmón, m., salmones, m., lenguado, m.", a: "žralok, pstruh, losos, parmice, mořský jazyk"},
+ 	{q: "mariscos, pl.m.", a: "mořské plody"},
+ 	{q: "calamar, m., cangrejo, m. (de mar x de río)", a: "krakatice, krab (mořský x říční)"},
+ 	{q: "caracol, m., langosta, f., ostra, f.", a: "plži (šneci), langusta, ústřice"},
+ 	{q: "pulpo, m., gamba, f., camarón, m., berberecho, m.", a: "chobotnice, kreveta, garnát, srdcovka jedlá"},
+ 	{q: "salchicha, f., salchichón, m.", a: "párek, salám"},
+ 	{q: "salami, m., morcilla, f.", a: "salám, prejt"},
+ 	{q: "longaniza, f., chorizo, m.", a: "longaniza (typ španělského salámu), chorizo"},
+ 	{q: "tocino, m., panceta, f./bacon/beicon, m.", a: "slanina/špek, bůček, anglická slanina"},
+ 	{q: "sobrasada, f., mortadela, f.", a: "Baleárská šunka, mortadela"},
+ 	{q: "carne, f., ahumada, matanza, f.", a: "uzené maso, zabíjačka"},
+ 	{q: "hortaliza, f.", a: "zelenina"},
+ 	{q: "tomate, m., pepino, m., pepinillo, m./cohombro, m.", a: "rajče, salátová okurka, zavařovací okurka"},
+ 	{q: "calabaza, f., zapallo, m.", a: "dýně"},
+ 	{q: "legumbres, pl.f.", a: "luštěniny"},
+ 	{q: "frijoles, pl.m./judías, pl.f. blancas x pintas", a: "bílé x barevné fazole"},
+ 	{q: "habas, pl.f., soja, f.", a: "sójový bob, sója"},
+ 	{q: "guisante, m., garbanzo, m., lentejas, pl.f.", a: "hrách, cizrna, čočka"},
+ 	{q: "lechuga, f., escarola, f.", a: "salát, čekanka"},
+ 	{q: "col, f./berza, f., col, f. de Bruselas", a: "hlávkové zelí, listová kapusta, růžičková kapusta"},
+ 	{q: "coliflor, f.", a: "květák"},
+ 	{q: "tubérculos, pl.m.", a: "hlízy"},
+ 	{q: "patata, p., remolacha, f. (azucarera)", a: "brambora, (cukrová) řepa"},
+	{q: "zanahoria, f., nabo, m., perejil, m., colinabo, m.", a: "mrkev, brukev řepák vodnice, petržel, kedlubna"},
+	{q: "rábano, m., rábano, m. picante, apio, m.", a: "ředkev, křen selský, celer"},
+	{q: "berenjena, f., espárragos, pl.m., alcachofa, f.", a: "lilek, chřest, artyčok"},
+	{q: "pimiento, m. x pimienta, f.(negra) x pimentón, m.(picante)", a: "paprika x pepř (černý) x paprika (koření)"},
+	{q: "guindilla, f.", a: "chilli paprička"},
+	{q: "espinacas, pl.f., arveja/alverja, f.", a: "špenát, hrách (LatE)"},
+	{q: "puerro, m., cebolla, f., cebolleta, f./cebollino, m.", a: "pór zahradní, cibule, jarní cibulka"},
+	{q: "(un diente de) ajo, m.", a: "(stroužek) česneku"},
+	{q: "aceituna, f. verde, negra, rellena", a: "zelená, černá, plněná oliva"},
+	{q: "seta, f., hongo, m., champiñón, m.", a: "houba (nadzemní část), houba (obecně), žampión"},
+	{q: "árbol, m. frutal, manzano, m., cerezo, m.", a: "ovocný strom, jabloň, třešeň"},
+	{q: "fruta, f. x fruto, m.", a: "gastronomický x botanický termín pro ovoce"},
+	{q: "manzana, f., cereza, f., pera, f., guinda, f.", a: "jablko, třešeň, hruška, višeň"},
+	{q: "ciruela, f., (ciruela) claudia, f.", a: "švestka, slíva"},
+	{q: "cítricos, pl.m., limón, m., naranja, f., mandarina, f., pomelo, m./toronja, f.", a: "citrusy, citrón, pomeranč, mandarinka, grapefruit"},
+	{q: "albaricoque, m., melocotón, m./durazno m., nectarina, f.", a: "meruňka, broskev, nektarinka"},
+	{q: "frutos, pl.m. secos", a: "suché plody (ořechy)"},
+	{q: "almendra, f., castaña, f., nuez, f., avellana, f., cacahuete, m./maní, m.", a: "mandle, kaštan, ořech, lískový ořech, arašíd"},
+	{q: "higo, m., dátil, m.", a: "fíky, datle"},
+	{q: "fresa, f., frambuesa, f., zarzamora, f./mora, f.,arándano, m. x arándano, m. rojo", a: "jahoda, malina, ostružina/moruš, Kanadská borůvka x klikva"},
+	{q: "arbusto, m. con fruta", a: "keř s ovocem"},
+	{q: "grosella, f., uva, f. crespa", a: "červený rybíz, srstka angrešt"},
+	{q: "piña, f., mango, m., coco, m.", a: "ananas, mango, kokos"},
+	{q: "melón, m., sandía, f., granada, f.", a: "meloun, vodní meloun, granátové jablko"},
+	{q: "plátano, m.", a: "banán"},
+	{q: "uva, f., uva, f. pasa", a: "hrozny vína, rozinky"},
+	{q: "rabo, m., rabillo, m., pedúnculo, m.", a: "větev, větvička, stopka"},
+	{q: "carne, f., pulpa f. de la fruta", a: "dužina plodu"},
+	{q: "pepita, f., semilla, f., hueso, m.", a: "malé semínko, semeno, pecka"},
+	{q: "cáscara, f., piel, f.", a: "kůra, slupka"},
+	{q: "fruta, f. fresca/de temporada, en almíbar, escarchada", a: "čerstvé ovoce/sezonní, ve sladkém nálevu, kandované ovoce"},
+	{q: "hogaza, f., turrón, m", a: "bochník, turecký med"},
+	{q: "bizcocho, m., galleta, f., barquillo, m", a: "piškot, sušenka, oplatka"},
+	{q: "buñuelo, m., bollo, m. (relleno)", a: "koblížek, koláč"},
+	{q: "pastel, m., torta, f., tarta, f.", a: "kousek dortu, narozeninový dort (LatE), dort (obecný pojem)"},
+	{q: "porra, f., churro, m.", a: "větší churro s drobenkou, obyčejné vláčnější churro"},
+	{q: "pan, m. blanco, negro, integral, tostado", a: "bílý, tmavý, celozrnný, toustový chléb"},
+	{q: "pan fresco, tierno x duro", a: "čerstvý, měkký x tvrdý chléb"},
+	{q: "tostada, f.", a: "toust, sendvič"},
+	{q: "panecillo, m., barra, f., barrita, f.,", a: "rohlík, bageta, bagetka"},
+	{q: "corteza, f., miga, f.", a: "kůra, vnitřní část chleba"},
+	{q: "pan mendrugo, m., corrusquete, m.", a: "tvrdý chléb, patka chleba"},
+	{q: "pasta, f.", a: "těstoviny"},
+	{q: "espaguetis, pl.m., macarrones, pl.m., fideos, pl.m.", a: "špagety, makaróny, nudle"},
+	{q: "canelones, pl.m.", a: "cannelloni"},
+	{q: "leche, f., fresca x cuajada, estropeada,", a: "čerstvé x zakysané, zkažené mléko"},
+	{q: "leche entera, semidesnatada, desnatada, condensada,", a: "plnotučné, polotučné, odtučněné, kondenzované mléko"},
+	{q: "leche en lata, en polvo, en crema, infantil", a: "mléko v plechovce, v prášku, smetana, mléko pro kojence"},
+	{q: "cuajada, f., requesón, m.", a: "mléčná sraženina, ricotta"},
+	{q: "yogurt, m. natural, con fruta", a: "bílý jogurt, s ovocem"},
+	{q: "crema, f., nata, f., batida x montada", a: "smetana, tekutější x tužší šlehačka"},
+	{q: "queso, m. de oveja, de cabra, para/de fundir, untar,", a: "ovčí, kozí sýr, na rozpuštění, roztírací"},
+	{q: "emmental, m., roquefort, m.", a: "ementál, roquefort"},
+	{q: "papilla, f.", a: "kašička (dětská)"},
+	{q: "cereal, m.", a: "cereálie"},
+	{q: "harina, f. de trigo, de centeno, de maíz", a: "pšeničná, ječná, rýžová mouka"},
+	{q: "sémola, f.", a: "krupice"},
+	{q: "sal, f. marina/de mar, común", a: "mořská/kuchyňská sůl"},
+	{q: "azúcar, m. de caña, de remolacha, en polvo,", a: "třtinový, řepný cukr, cukr v prášku"},	
+	{q: "azúcar en terrones, granulado, azúcar, m. glas", a: "kostkový cukr, cukr krystal, moučkový cukr"},
+	{q: "manteca, f. de cerdo, vegetal/margarina, f.,", a: "vepřové sádlo, margarín"},
+	{q: "mantequilla, f.", a: "máslo"},
+	{q: "grasa, f., tocino, m., sebo, m.", a: "tuk, špek, lůj"},
+	{q: "aceite, m. de oliva, de girasol, vegetal", a: "olivový, slunečnicový, rostlinný olej"},
+	{q: "mostaza, f., kétchup, m.", a: "hořčice, kečup"},
+	{q: "mayonesa, f./mahonesa, f.", a: "majonéza"},	
+	{q: "salsa, f. rosa, tártara", a: "smíchaný kečup s majonézou, tatarská omáčka"},
+	{q: "levadura, f.", a: "kvasinky"},
+	{q: "huevo, m., clara, f., yema, f., cáscara, f.", a: "vejce, bílek, žloutek, skořápka"},
+	{q: "vinagre, m.,", a: "ocet"},
+	{q: "especias, pl.f.", a: "koření"},
+	{q: "canela, f., jengibre, m., nuez, f., moscada", a: "skořice, zázvor, muškátový oříšek"},
+	{q: "clavo, m., vainilla, f.", a: "hřebíček, vanilka"},
+	{q: "chile, m., pimienta, f., negra, blanca", a: "chilli paprička, černý, bílý pepř"},
+	{q: "tomillo, m., comino, m.", a: "tymián, kmín"},
+	{q: "orégano, m., albahaca, f., azafrán, m., laurel, m.", a: "oregano, bazalka, šafrán, vavřín (bobkový list)"},
+	{q: "comedor, m. de escuela", a: "školní jídelna"},
+	{q: "cantina, f.", a: "jídelna"},
+	{q: "cafetería, f., café, m.", a: "kavárna"},
+	{q: "bodega, f., merendero, m.", a: "vinný sklep"},
+	{q: "bar, m.", a: "bar"},
+	{q: "barra, f. del bar", a: "barový pult"},
+	{q: "taberna, f., tasca, f.", a: "hospoda, hostinec"},
+	{q: "sidrería, f.", a: "jablečný bar"},
+	{q: "chiringuito, m.", a: "plážový bar"},
+	{q: "puesto, m. de comida", a: "stánek s jídlem"},
+	{q: "restaurante, m., autoservicio, m.", a: "samoobslužná restaurace"},
+	{q: "cocinero/-a, m. y f., camarero/-a, m. y f. /mesero/ m. y f.", a: "kuchař, číšník"},
+	{q: "chef, m., barman, m.", a: "šéfkuchař, barman"},
+	{q: "menú, m.", a: "menu"},
+	{q: "tomar tacos", a: "dát si tacos"},
+	{q: "** carne de cañón", a: "potrava pro děla"},
+	{q: "** carne/piel de gallina", a: "huso kůže"},
+	{q: "** en carne viva", a: "do živého"},
+	{q: "** metido/entrado en carnes", a: "někdo při těle, robustní"},
+	{q: "** de pocas carnes", a: "velice hubený/á"},
+	{q: "** poner toda la carne en el asador", a: "vsadit všechno na jednu kartu"},
+	{q: "** de carne y hueso", a: "z masa a kostí"},
+	{q: "** dar en hueso", a: "narazit na překážku"},
+	{q: "** hasta los huesos", a: "až na kost"},
+	{q: "** la sinhueso/ sin hueso", a: "jazyk (hovorově)"},
+	{q: "** estar en los huesos", a: "bit dlouhán, velice vysoký"},
+	{q: "** ser un hueso (duro de roer)", a: "být nepřesvědčitelný"},
+	{q: "** pelar la pava", a: "flirtovat (teenageři)"},
+	{q: "** edad del pavo", a: "puberta"},
+	{q: "** estar como una chota/cabra", a: "dělat šílenosti"},
+	{q: "** pescar un novio, un catarro", a: "ulovit kluka, chytit rýmu"},
+	{q: "** pescarlas/cazarlas al vuelo", a: "pochytit něco na první dobrou"},
+	{q: "** cortar el bacalao", a: "být u kormidla"},
+	{q: "** ni chicha ni limoná", a: "Nemastné, neslané. Ani ryba, ani rak."},
+	{q: "** por la boca muere el pez", a: "mluviti stříbro, mlčeti zlato"},
+	{q: "** estar jamón /estar (muy)bueno", a: "být kus, být fešák"},
+	{q: "** me importa un pepino/pimiento/rábano", a: "je mi to fuk, je mi to buřt, je mi to putna"},
+	{q: "** ponerse como un tomate", a: "zčervenat jako rajče, být rudý jako rak"},
+	{q: "** (mandar a alguien) a freír espárragos", a: "poslat někoho do háje/někam/k šípku"},
+	{q: "** dar calabazas a alguien", a: "dát kopačky/dát košem"},
+	{q: "** media naranja", a: "drahá polovička"},
+	{q: "** la manzana de la discordia", a: "jablko sváru"},
+	{q: "** sano como una manzana", a: "zdravý jako rybička"},
+	{q: "** la manzana que estropea el cesto", a: "jedno shnilé jablko zkazí celý sud"},
+	{q: "** piel de melocotón", a: "mít pleť jako broskvička"},
+	{q: "** dar mucho al coco", a: "lámat si hlavu, šrotovat, hloubat"},
+	{q: "** comer el coco (a alguien)", a: "nasadit někomu brouka do hlavy"},
+	{q: "** ser un coco", a: "být chytrý jako rádio"},
+	{q: "** boquita de fresa", a: "sladká pusinka"},
+	{q: "** estar de mala uva", a: "mít špatnou náladu"},
+	{q: "** al pan, pan, y al vino, vino", a: "mluvit na rovinu, nalít si čistého vína"},
+	{q: "** (más) bueno que el pan", a: "zlatý člověk"},
+	{q: "** nuestro pan de cada día", a: "náš vezdejší/každodenní chléb"},
+	{q: "** poner a alguien a pan y agua", a: "držet někoho o chlebu a o vodě"},
+	{q: "** ser harina de otro costal", a: "to je jiná káva"},
+	{q: "** hacer buenas migas con alguien", a: "být s někým zadobře"},
+	{q: "** tener miga una cosa", a: "je to oříšek"},
+	{q: "** estar hecho migas", a: "být hotový, úplně vyřízený"},
+	{q: "** como churros", a: "jako nic, snadno, lehce"},
+	{q: "** descubrirse el pastel", a: "vyjít najevo, přiznat barvy, prasklo to"},
+	{q: "** dar una torta/ un tortazo a alguien", a: "dát někomu facku/pohlavek"},
+	{q: "** darse un atracón", a: "přejíst se, naládovat se, opít se, zlískat se"},
+	{q: "** estar como un espagueti/fideo", a: "být samá ruka, samá noha"},
+	{q: "** no estar el horno para bollos/tortas", a: "nemít na to náladu"},
+	{q: "** estar como un queso", a: "být k nakousnutí, být k sežrání, být kus"},
+	{q: "** la crema y nata de la sociedad", a: "smetánka společnosti"},
+	{q: "** ¡leche(s)!", a: "Do háje! Sakra! Ty jo!"},
+	{q: "** blanco como la leche", a: "bílý jako mléko/stěna"},
+	{q: "** ser la leche", a: "je to pecka, je to super"},
+	{q: "** mala leche", a: "špatná nálada"},
+	{q: "** ir de copas", a: "jít na skleničku/pivo, jít zapařit"},
+	{q: "** tener una copa de más", a: "být přiopitý"},
+	{q: "** haber sido cocinero antes que fraile", a: "Vědět, jak to chodí. Být starý mazák."},
+	{q: "** beber como un cosaco", a: "pít jako Dán"},
+
+        {q: "A flor de piel", a: "Algo que es muy evidente o una emoción muy sensible."}
+    ];
+
+    let idx = 0;
+    const cardEl = document.getElementById('c');
+    const qEl = document.getElementById('q');
+    const aEl = document.getElementById('a');
+    const sEl = document.getElementById('status');
+
+    function update() {
+        cardEl.classList.remove('flipped');
+        qEl.innerText = data[idx].q;
+        aEl.innerText = data[idx].a;
+        sEl.innerText = `${idx + 1} / ${data.length}`;
+    }
+
+    function flip() { cardEl.classList.toggle('flipped'); }
+    function next() { if(idx < data.length - 1) { idx++; update(); } }
+    function prev() { if(idx > 0) { idx--; update(); } }
+    function shuffle() {
+        data.sort(() => Math.random() - 0.5);
+        idx = 0;
+        update();
+    }
+
+    // Atajos de teclado
+    document.addEventListener('keydown', (e) => {
+        if(e.code === 'ArrowRight') next();
+        if(e.code === 'ArrowLeft') prev();
+        if(e.code === 'Space') flip();
+    });
+
+    update();
+</script>
+</body>
+</html>
