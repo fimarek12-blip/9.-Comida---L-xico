@@ -2,27 +2,103 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Master de Vocabulario - 3500 Palabras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Vocabulario Avanzado - Clase</title>
+    
     <style>
         :root { --p: #2c3e50; --a: #3498db; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .card-container { perspective: 1000px; width: 450px; height: 280px; cursor: pointer; }
-        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 15px; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+
+        .card-container { 
+            perspective: 1000px; 
+            width: 90vw; 
+            max-width: 450px; 
+            height: 300px; 
+            cursor: pointer;
+            /* Parche Safari */
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card { 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            transition: transform 0.4s; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            border-radius: 15px;
+            /* Parche Safari para 3D */
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+
         .card.flipped { transform: rotateY(180deg); }
-        .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; border-radius: 15px; text-align: center; font-size: 1.6rem; border: 2px solid #ddd; }
-        .front { background: white; color: var(--p); font-weight: bold; }
-        .back { background: var(--a); color: white; transform: rotateY(180deg); font-size: 1.3rem; }
-        .controls { margin-top: 25px; display: flex; gap: 10px; }
-        button { padding: 12px 20px; border: none; border-radius: 8px; background: var(--p); color: white; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        button:hover { background: #34495e; transform: translateY(-2px); }
+
+        .face { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 25px; 
+            box-sizing: border-box; 
+            border-radius: 15px; 
+            text-align: center; 
+            font-size: 1.4rem;
+            /* Parche Safari para ocultar la cara trasera */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .front { background: white; color: var(--p); font-weight: bold; border: 2px solid #ddd; }
+        .back { background: var(--a); color: white; transform: rotateY(180deg); font-size: 1.2rem; }
+
+        .controls { 
+            margin-top: 30px; 
+            display: flex; 
+            gap: 10px; 
+            width: 90vw; 
+            max-width: 450px;
+        }
+
+        button { 
+            flex: 1;
+            padding: 18px 10px; 
+            border: none; 
+            border-radius: 12px; 
+            background: var(--p); 
+            color: white; 
+            font-size: 1rem; 
+            font-weight: bold;
+            touch-action: manipulation;
+        }
+
         .info { margin-top: 15px; font-weight: bold; color: #7f8c8d; }
+
+        /* Ajustes específicos para móviles muy pequeños */
+        @media (max-height: 600px) {
+            .card-container { height: 220px; }
+            .face { font-size: 1.1rem; }
+        }
     </style>
 </head>
 <body>
 
     <div class="card-container" onclick="flip()">
         <div class="card" id="c">
-            <div class="face front" id="q">Cargando vocabulario...</div>
+            <div class="face front" id="q">Cargando...</div>
             <div class="face back" id="a">...</div>
         </div>
     </div>
@@ -30,17 +106,14 @@
     <div class="info" id="status">0 / 0</div>
 
     <div class="controls">
-        <button onclick="prev()">⬅ Anterior</button>
-        <button onclick="shuffle()">🔀 Mezclar todo</button>
-        <button onclick="next()">Siguiente ➡</button>
+        <button onclick="prev()">⬅ Ant.</button>
+        <button onclick="shuffle()">🔀 Mezclar</button>
+        <button onclick="next()">Sig. ➡</button>
     </div>
 
 <script>
-    // --- TU BASE DE DATOS OPTIMIZADA ---
-    // Puedes pegar aquí las 3500 líneas sin miedo. 
-    // Asegúrate de que cada línea termine en coma , excepto la última.
     const data = [
-  	{q: "régimen, m. de comidas", a: "stravovací režim"},
+{q: "régimen, m. de comidas", a: "stravovací režim"},
 	{q: "estar a régimen / a dieta", a: "mít stravovací režim / držet dietu"},
 	{q: "desayuno, m. x ayuno, m.", a: "snídaně x absence snídaně"},
 	{q: "desayunar x ayunar, estar en ayunas", a: "snídat x nesnídat, postit se"},
@@ -483,9 +556,11 @@
 
     function update() {
         cardEl.classList.remove('flipped');
-        qEl.innerText = data[idx].q;
-        aEl.innerText = data[idx].a;
-        sEl.innerText = `${idx + 1} / ${data.length}`;
+        setTimeout(() => {
+            qEl.innerText = data[idx].q;
+            aEl.innerText = data[idx].a;
+            sEl.innerText = `${idx + 1} / ${data.length}`;
+        }, 100);
     }
 
     function flip() { cardEl.classList.toggle('flipped'); }
@@ -497,7 +572,6 @@
         update();
     }
 
-    // Atajos de teclado
     document.addEventListener('keydown', (e) => {
         if(e.code === 'ArrowRight') next();
         if(e.code === 'ArrowLeft') prev();
